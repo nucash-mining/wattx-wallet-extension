@@ -1,0 +1,20 @@
+{
+  "name": "wattx-wallet-extension",
+  "version": "0.1.0",
+  "description": "WATTx ordinals & UTXO browser wallet (MV3). Hold WTX, inscribe ordinals, connect to WATTx dApps.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "npm run build -- --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.0",
+    "esbuild-plugin-polyfill-node": "^0.3.0"
+  },
+  "dependencies": {
+    "@bitcoinerlab/secp256k1": "^1.2.0",
+    "bitcoinjs-lib": "^6.1.5",
+    "ecpair": "^2.1.0",
+    "tiny-secp256k1": "^2.2.3"
+  }
+}

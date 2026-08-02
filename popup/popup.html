@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  :root{--bg:#0a0d18;--card:#131829;--line:#232a42;--ink:#eef2ff;--ghost:#8b97c4;--volt:#ffd400;--arc:#3d7bff;--live:#3ee089;--hot:#ff5f7a}
+  *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+  body{width:340px;background:var(--bg);color:var(--ink);padding:1rem}
+  .top{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem}
+  .top svg{width:26px;height:26px;color:var(--volt)}
+  .top b{font-weight:700;letter-spacing:.01em}
+  .top b span{color:var(--volt)}
+  .mono{font-family:ui-monospace,Menlo,monospace}
+  button{cursor:pointer;border:0;border-radius:9px;font-weight:600;font-size:.86rem;padding:.6rem .9rem;font-family:inherit}
+  .primary{background:var(--volt);color:#0a0d18;width:100%}
+  .ghost{background:transparent;color:var(--arc);border:1px solid var(--arc);width:100%;margin-top:.5rem}
+  input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:.6rem;font-family:ui-monospace,monospace;font-size:.82rem;margin-top:.5rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.9rem;margin-bottom:.8rem}
+  .lbl{font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ghost)}
+  .addr{font-family:ui-monospace,monospace;font-size:.74rem;word-break:break-all;margin-top:.3rem}
+  .bal{font-family:ui-monospace,monospace;font-size:1.5rem;font-weight:700;color:var(--volt)}
+  .hide{display:none}
+  .msg{font-size:.76rem;color:var(--ghost);margin-top:.6rem;min-height:1rem}
+</style>
+</head>
+<body>
+  <div class="top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V8zM12 16v6"/></svg>
+    <b>WATTx <span>Wallet</span></b>
+  </div>
+
+  <div id="setup">
+    <button class="primary" id="create">Create new wallet</button>
+    <input id="wif" placeholder="…or paste a WIF private key to import" />
+    <button class="ghost" id="import">Import wallet</button>
+  </div>
+
+  <div id="wallet" class="hide">
+    <div class="card">
+      <div class="lbl">Balance</div>
+      <div class="bal" id="bal">— WTX</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Ordinals address (taproot)</div>
+      <div class="addr" id="taproot">—</div>
+    </div>
+    <div class="card">
+      <div class="lbl">Payments address (segwit)</div>
+      <div class="addr" id="segwit">—</div>
+    </div>
+    <button class="ghost" id="refresh">Refresh</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

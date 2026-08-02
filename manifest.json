@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "WATTx Wallet",
+  "version": "0.1.0",
+  "description": "WATTx ordinals & UTXO wallet — hold WTX, inscribe ordinals, and connect to WATTx dApps. The Xverse/Unisat of WATTx.",
+  "icons": { "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": { "default_popup": "popup/popup.html", "default_title": "WATTx Wallet" },
+  "background": { "service_worker": "dist/background.js", "type": "module" },
+  "permissions": ["storage"],
+  "host_permissions": ["https://rpc-wtx.wattxchange.app/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://localhost/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["dist/inpage.js"], "matches": ["<all_urls>"] }
+  ]
+}
