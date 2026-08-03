@@ -8,7 +8,7 @@ import * as bitcoin from 'bitcoinjs-lib';
 // WATTx UTXO/ordinals indexer API (address UTXOs + broadcast). This backend is
 // the one piece that must be stood up publicly (Blockbook/Esplora-style over
 // wattxd) for the wallet to work without the user running a node.
-const UTXO_API = 'https://ord-api.wattxchange.app'; // TODO: deploy this
+const UTXO_API = 'https://ord-api.wattxchange.app'; // live (pm2 wattx-utxo-api + ord-relay → Oracle nginx)
 
 // --- key storage (encrypted at rest with a user passphrase; simplified here) ---
 async function getKey() {
