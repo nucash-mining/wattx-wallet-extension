@@ -3,9 +3,22 @@
 import * as bitcoin from 'bitcoinjs-lib';
 import { ECPairFactory } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
+import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
+import { HDKey } from '@scure/bip32';
 
 bitcoin.initEccLib(ecc);
 export const ECPair = ECPairFactory(ecc);
+
+// BIP39/BIP86-style HD wallet: one taproot account key derived from a 12-word
+// seed phrase (coin type = WATTx chain id). The phrase is the canonical backup.
+export const WATTX_PATH = "m/86'/22356'/0'/0/0";
+export const newMnemonic = () => generateMnemonic(wordlist, 128); // 12 words
+export function keyFromMnemonic(mnemonic) {
+  if (!validateMnemonic(mnemonic, wordlist)) throw new Error('Invalid seed phrase — check the 12 words');
+  const node = HDKey.fromMasterSeed(mnemonicToSeedSync(mnemonic)).derive(WATTX_PATH);
+  return ECPair.fromPrivateKey(Buffer.from(node.privateKey), { network: WATTX });
+}
 
 export const WATTX = {
   messagePrefix: '\x18WATTx Signed Message:\n',

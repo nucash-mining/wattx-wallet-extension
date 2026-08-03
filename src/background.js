@@ -2,7 +2,8 @@
 // orchestrates ordinal inscription. Self-custody: the private key never leaves
 // the extension. Reads UTXOs and broadcasts via a WATTx UTXO API (see UTXO_API).
 import { ECPair, WATTX, addressesFromKey, prepareCommit, buildRevealSigned,
-         MIN_POSTAGE, WATTX_MIN_FEERATE, WATTX_MIN_FEE, estRevealVsize, toXOnly } from './wattx.js';
+         MIN_POSTAGE, WATTX_MIN_FEERATE, WATTX_MIN_FEE, estRevealVsize, toXOnly,
+         newMnemonic, keyFromMnemonic } from './wattx.js';
 import * as bitcoin from 'bitcoinjs-lib';
 
 // WATTx UTXO/ordinals indexer API (address UTXOs + broadcast). This backend is
@@ -125,11 +126,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (method === 'getBalance') { const k = await getKey(); const b = await api(`/address/${addressesFromKey(k).segwit}/balance`); return sendResponse({ result: b }); }
       if (method === 'inscribe') return sendResponse({ result: await doInscribe(params, origin) });
       // popup-only key management — never reachable from a web page
-      if (method === 'createWallet' || method === 'importWallet') {
+      if (method === 'createWallet' || method === 'importWallet' || method === 'exportBackup') {
         if (!trusted) return sendResponse({ error: 'forbidden' });
-        const k = method === 'createWallet' ? ECPair.makeRandom({ network: WATTX }) : ECPair.fromWIF(params.wif, WATTX);
-        await setKey(k);
-        return sendResponse({ result: addressesFromKey(k) });
+        if (method === 'exportBackup') {
+          const { wifKey, mnemonic } = await chrome.storage.local.get(['wifKey', 'mnemonic']);
+          if (!wifKey) return sendResponse({ error: 'No wallet yet' });
+          return sendResponse({ result: { mnemonic: mnemonic || null, wif: wifKey } });
+        }
+        let k, mnemonic = null;
+        if (method === 'createWallet') { mnemonic = newMnemonic(); k = keyFromMnemonic(mnemonic); }
+        else if (params.mnemonic) { mnemonic = params.mnemonic.trim().toLowerCase().replace(/\s+/g, ' '); k = keyFromMnemonic(mnemonic); }
+        else k = ECPair.fromWIF(params.wif, WATTX);
+        await chrome.storage.local.set({ wifKey: k.toWIF(), ...(mnemonic ? { mnemonic } : {}) });
+        if (!mnemonic) await chrome.storage.local.remove('mnemonic'); // a WIF import has no phrase
+        return sendResponse({ result: { ...addressesFromKey(k), ...(mnemonic ? { mnemonic } : {}) } });
       }
       return sendResponse({ error: 'unknown method: ' + method });
     } catch (e) { sendResponse({ error: e.message }); }

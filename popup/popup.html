@@ -21,6 +21,10 @@
   .bal{font-family:ui-monospace,monospace;font-size:1.5rem;font-weight:700;color:var(--volt)}
   .hide{display:none}
   .msg{font-size:.76rem;color:var(--ghost);margin-top:.6rem;min-height:1rem}
+  .words{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.35rem;margin-top:.5rem}
+  .words span{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:.3rem .4rem;font-family:ui-monospace,monospace;font-size:.72rem}
+  .words span i{color:var(--ghost);font-style:normal;margin-right:.3rem;font-size:.62rem}
+  .warn{font-size:.72rem;color:var(--hot);line-height:1.5;margin:.7rem 0}
 </style>
 </head>
 <body>
@@ -31,8 +35,17 @@
 
   <div id="setup">
     <button class="primary" id="create">Create new wallet</button>
-    <input id="wif" placeholder="…or paste a WIF private key to import" />
+    <input id="wif" placeholder="…or paste your 12-word seed phrase (or WIF key)" />
     <button class="ghost" id="import">Import wallet</button>
+  </div>
+
+  <div id="seedbox" class="hide">
+    <div class="card">
+      <div class="lbl">Your recovery phrase</div>
+      <div class="words" id="words"></div>
+    </div>
+    <div class="warn">Write these 12 words down, in order, somewhere offline. They are the ONLY way to recover this wallet — anyone who has them can spend your WTX and ordinals.</div>
+    <button class="primary" id="seedok">I've written it down</button>
   </div>
 
   <div id="wallet" class="hide">
@@ -49,6 +62,15 @@
       <div class="addr" id="segwit">—</div>
     </div>
     <button class="ghost" id="refresh">Refresh</button>
+    <button class="ghost" id="backupBtn">Backup wallet</button>
+    <div id="backup" class="hide">
+      <div class="card" style="margin-top:.8rem">
+        <div class="lbl" id="backupLbl">Recovery phrase</div>
+        <div class="words" id="backupWords"></div>
+        <div class="addr hide" id="backupWif"></div>
+      </div>
+      <div class="warn">Never share this. Anyone who has it controls your wallet.</div>
+    </div>
   </div>
 
   <div class="msg" id="msg"></div>
