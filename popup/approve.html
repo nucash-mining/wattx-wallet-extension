@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<style>
+  :root{--bg:#0a0d18;--card:#131829;--line:#232a42;--ink:#eef2ff;--ghost:#8b97c4;--volt:#ffd400;--arc:#3d7bff;--live:#3ee089;--hot:#ff5f7a}
+  *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+  body{background:var(--bg);color:var(--ink);padding:1.1rem}
+  .top{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem}
+  .top svg{width:26px;height:26px;color:var(--volt)}
+  .top b{font-weight:700}
+  .top b span{color:var(--volt)}
+  h3{font-size:1rem;margin-bottom:.4rem}
+  .origin{font-family:ui-monospace,monospace;font-size:.8rem;color:var(--arc);word-break:break-all;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:.6rem;margin:.6rem 0}
+  .det{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:.6rem .8rem;font-size:.78rem;line-height:1.9;margin-bottom:.8rem}
+  .det b{color:var(--volt);font-family:ui-monospace,monospace}
+  .sub{font-size:.76rem;color:var(--ghost);line-height:1.5;margin-bottom:.9rem}
+  .row{display:flex;gap:.6rem}
+  button{cursor:pointer;border:0;border-radius:9px;font-weight:600;font-size:.86rem;padding:.65rem .9rem;font-family:inherit;flex:1}
+  .ok{background:var(--volt);color:#0a0d18}
+  .no{background:transparent;color:var(--hot);border:1px solid var(--hot)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+  <div class="top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2v6M15 2v6M7 8h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V8zM12 16v6"/></svg>
+    <b>WATTx <span>Wallet</span></b>
+  </div>
+  <h3 id="title">Connect to this site?</h3>
+  <div class="origin" id="origin">—</div>
+  <div class="det hide" id="det"></div>
+  <p class="sub" id="sub">The site will see your WATTx addresses and can request inscriptions — each inscription still needs your approval.</p>
+  <div class="row">
+    <button class="no" id="reject">Reject</button>
+    <button class="ok" id="approve">Approve</button>
+  </div>
+  <script src="approve.js"></script>
+</body>
+</html>

@@ -30875,7 +30875,7 @@ async function fundCommit(keyPair, commitAddress, amountSat) {
   const txid = (await api("/tx", { hex: tx.toHex() })).txid;
   return { txid, vout: 0, value: amountSat };
 }
-async function doInscribe({ contentType, dataBase64, toAddress }) {
+async function doInscribe({ contentType, dataBase64, toAddress }, origin) {
   const keyPair = await getKey();
   const to = toAddress || addressesFromKey(keyPair).taproot;
   const data = Buffer3.from(dataBase64, "base64");
@@ -30883,20 +30883,66 @@ async function doInscribe({ contentType, dataBase64, toAddress }) {
   const commit = prepareCommit(internal, contentType, data);
   const revealFee = Math.max(estRevealVsize(commit.leafScript.length) * WATTX_MIN_FEERATE, WATTX_MIN_FEE);
   const fund = MIN_POSTAGE + revealFee + 1e4;
+  const ok = await requestApproval("inscribe", origin, {
+    ctype: contentType,
+    kb: (data.length / 1024).toFixed(1),
+    wtx: ((fund + 5e4) / 1e8).toFixed(4),
+    ...toAddress ? { to: toAddress } : {}
+  });
+  if (!ok) throw new Error("User rejected the inscription");
   const c = await fundCommit(keyPair, commit.address, fund);
   const reveal = buildRevealSigned(internal, commit, c.txid, c.vout, c.value, to, MIN_POSTAGE);
   const revealTxid = (await api("/tx", { hex: reveal.toHex() })).txid;
   return { commitTxid: c.txid, revealTxid, inscriptionId: `${revealTxid}i0` };
 }
-var approvedOrigins = /* @__PURE__ */ new Set();
+var approvalWaits = /* @__PURE__ */ new Map();
+function requestApproval(kind, origin, extra = {}) {
+  return new Promise((resolve) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    approvalWaits.set(id, resolve);
+    const q = new URLSearchParams({ id, kind, origin: origin || "unknown", ...extra });
+    chrome.windows.create({
+      url: chrome.runtime.getURL("popup/approve.html?" + q),
+      type: "popup",
+      width: 380,
+      height: kind === "inscribe" ? 460 : 360
+    }).catch(() => {
+      approvalWaits.delete(id);
+      resolve(false);
+    });
+  });
+}
+async function ensureConnected(origin) {
+  const { approvedOrigins = [] } = await chrome.storage.local.get("approvedOrigins");
+  if (approvedOrigins.includes(origin)) return true;
+  const ok = await requestApproval("connect", origin);
+  if (ok) await chrome.storage.local.set({ approvedOrigins: [...approvedOrigins, origin] });
+  return ok;
+}
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       const { method, params } = msg;
+      const origin = sender.origin || sender.tab && new URL(sender.tab.url).origin || msg.origin || "unknown";
+      const trusted = origin.startsWith("chrome-extension://");
+      if (method === "approvalResult") {
+        if (!trusted) return sendResponse({ error: "forbidden" });
+        const w = approvalWaits.get(params.id);
+        if (w) {
+          approvalWaits.delete(params.id);
+          w(!!params.granted);
+        }
+        return sendResponse({ result: true });
+      }
       if (method === "connect") {
-        approvedOrigins.add(msg.origin);
         const k = await getKey().catch(() => null);
-        return sendResponse({ result: k ? addressesFromKey(k) : null });
+        if (!k) return sendResponse({ result: null });
+        if (!trusted && !await ensureConnected(origin)) return sendResponse({ error: "User rejected the connection" });
+        return sendResponse({ result: addressesFromKey(k) });
+      }
+      if (!trusted) {
+        const { approvedOrigins = [] } = await chrome.storage.local.get("approvedOrigins");
+        if (!approvedOrigins.includes(origin)) return sendResponse({ error: "Not connected \u2014 call wattx.connect() first" });
       }
       if (method === "getAccounts") {
         const k = await getKey();
@@ -30907,14 +30953,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const b = await api(`/address/${addressesFromKey(k).segwit}/balance`);
         return sendResponse({ result: b });
       }
-      if (method === "inscribe") return sendResponse({ result: await doInscribe(params) });
-      if (method === "createWallet") {
-        const k = ECPair.makeRandom({ network: WATTX });
-        await setKey(k);
-        return sendResponse({ result: addressesFromKey(k) });
-      }
-      if (method === "importWallet") {
-        const k = ECPair.fromWIF(params.wif, WATTX);
+      if (method === "inscribe") return sendResponse({ result: await doInscribe(params, origin) });
+      if (method === "createWallet" || method === "importWallet") {
+        if (!trusted) return sendResponse({ error: "forbidden" });
+        const k = method === "createWallet" ? ECPair.makeRandom({ network: WATTX }) : ECPair.fromWIF(params.wif, WATTX);
         await setKey(k);
         return sendResponse({ result: addressesFromKey(k) });
       }
